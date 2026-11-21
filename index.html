@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0284c7">
+<link rel="manifest" href="./manifest.json">
+<title>AutoWallCAD — Smart Home Plan &amp; 2D/3D CAD Studio</title>
+<style>
+  :root {
+    --bg: #0b1120; --bg-elevated: #111827; --card: #161f33; --card-inner: #0f172a;
+    --border: #26334d; --border-strong: #3b4d70; --accent: #0ea5e9; --accent-dark: #0284c7;
+    --accent-glow: rgba(14, 165, 233, 0.16); --text: #f1f5f9; --text-soft: #cbd5e1;
+    --muted: #94a3b8; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  body.daylight-theme {
+    --bg: #f1f5f9; --bg-elevated: #ffffff; --card: #ffffff; --card-inner: #f8fafc;
+    --border: #cbd5e1; --border-strong: #94a3b8; --accent: #0284c7; --accent-dark: #0369a1;
+    --accent-glow: rgba(2, 132, 199, 0.1); --text: #0f172a; --text-soft: #334155; --muted: #64748b;
+  }
+  * { box-sizing: border-box; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.4; }
+  .topbar { position: sticky; top: 0; z-index: 40; background: var(--bg-elevated); border-bottom: 1px solid var(--border); padding: 9px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, #0ea5e9, #2563eb); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; }
+  .brand-title { font-size: 1.06rem; font-weight: 800; margin: 0; }
+  .brand-sub { font-size: 0.72rem; color: var(--muted); display: block; }
+  .studio-shell { max-width: 1520px; margin: 0 auto; padding: 12px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 1080px) { .studio-shell { grid-template-columns: 425px 1fr; align-items: start; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .sec-head { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 700; margin: 0 0 9px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+  label.lbl { font-size: 0.71rem; color: var(--muted); font-weight: 600; display: block; margin-bottom: 3px; }
+  input, select { width: 100%; padding: 7px 8px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--card-inner); color: var(--text); font-size: 0.81rem; }
+  .btn { padding: 9px 10px; border: none; border-radius: 7px; font-weight: 700; font-size: 0.78rem; cursor: pointer; color: #fff; background: linear-gradient(135deg, #0284c7, #2563eb); }
+  canvas { width: 100%; max-width: 920px; height: auto; display: block; margin: 0 auto; background: #fff; border-radius: 6px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">AW</div>
+    <div>
+      <h1 class="brand-title">AutoWallCAD</h1>
+      <span class="brand-sub">Architectural Floor Plan, 3D Walkthrough &amp; CAD Studio</span>
+    </div>
+  </div>
+  <span style="font-size:0.72rem;color:#10b981;font-weight:700;">v1.0.0 • Offline Ready</span>
+</header>
+<div class="studio-shell">
+  <aside>
+    <div class="card">
+      <div class="sec-head"><span>01 Plot &amp; Standard Generator</span></div>
+      <div class="grid-3">
+        <div><label class="lbl">Width (ft)</label><input type="number" id="pw" value="30" min="15" max="150" oninput="drawPlan()"></div>
+        <div><label class="lbl">Depth (ft)</label><input type="number" id="pd" value="50" min="25" max="180" oninput="drawPlan()"></div>
+        <div><label class="lbl">Facing</label><select id="pf" onchange="drawPlan()"><option>East</option><option>North</option><option>West</option><option>South</option></select></div>
+      </div>
+      <div style="margin-top:10px;"><button type="button" class="btn" style="width:100%;" onclick="drawPlan()">Generate Standard Plan</button></div>
+    </div>
+  </aside>
+  <main>
+    <div class="card"><canvas id="c" width="900" height="720"></canvas></div>
+  </main>
+</div>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('./sw.js').catch(function(){});
+}
+function drawPlan() {
+  var c = document.getElementById('c'), ctx = c.getContext('2d');
+  var W = parseFloat(document.getElementById('pw').value) || 30;
+  var D = parseFloat(document.getElementById('pd').value) || 50;
+  var F = document.getElementById('pf').value;
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#0f172a'; ctx.font = 'bold 20px sans-serif';
+  ctx.fillText('AutoWallCAD — ' + W + "' x " + D + "' (" + F + ' Facing)', 40, 42);
+  var s = Math.min(680 / W, 560 / D), ox = (c.width - W * s) / 2, oy = 80;
+  ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 3; ctx.strokeRect(ox, oy, W * s, D * s);
+  var rooms = [
+    { n: 'MASTER BEDROOM (12x12)', x: 0, y: 0, w: W * 0.52, h: D * 0.28, bg: '#e0f2fe' },
+    { n: 'BEDROOM 2 (10x12)', x: W * 0.52, y: 0, w: W * 0.48, h: D * 0.28, bg: '#e0f2fe' },
+    { n: 'KITCHEN (8x10)', x: 0, y: D * 0.28, w: W * 0.36, h: D * 0.22, bg: '#fef3c7' },
+    { n: 'DINING + LIVING (12x14)', x: W * 0.36, y: D * 0.28, w: W * 0.64, h: D * 0.36, bg: '#f1f5f9' },
+    { n: 'BATH+WC (4.5x7)', x: 0, y: D * 0.50, w: W * 0.36, h: D * 0.14, bg: '#fce7f3' },
+    { n: 'CAR PORCH & STAIR (12x15)', x: 0, y: D * 0.64, w: W * 0.55, h: D * 0.36, bg: '#e2e8f0' },
+    { n: 'FRONT GARDEN / VERANDAH', x: W * 0.55, y: D * 0.64, w: W * 0.45, h: D * 0.36, bg: '#dcfce7' }
+  ];
+  rooms.forEach(function(r) {
+    ctx.fillStyle = r.bg; ctx.fillRect(ox + r.x * s, oy + r.y * s, r.w * s, r.h * s);
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2; ctx.strokeRect(ox + r.x * s, oy + r.y * s, r.w * s, r.h * s);
+    ctx.fillStyle = '#0f172a'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(r.n, ox + (r.x + r.w / 2) * s, oy + (r.y + r.h / 2) * s);
+  });
+  ctx.textAlign = 'left';
+}
+drawPlan();
+// App initialization script inside template
+</script>
+</body>
+</html>

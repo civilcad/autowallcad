@@ -1,0 +1,17 @@
+{
+  "name": "AutoWallCAD — Smart Home Plan & CAD Studio",
+  "short_name": "AutoWallCAD",
+  "description": "Architectural Floor Plan Generator, 2D CAD Editor, 3D Walkthrough & BOQ Estimator",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1120",
+  "theme_color": "#0284c7",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230284c7'/%3E%3Cpath d='M12 52h40M16 52V22l16-10 16 10v30M26 52V38h12v14' fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
